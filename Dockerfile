@@ -1,4 +1,4 @@
-FROM hashicorp/terraform:0.12.29 as terraform
+FROM hashicorp/terraform:1.0.10 as terraform
 
 FROM amazon/aws-cli:2.3.4 as aws
 
