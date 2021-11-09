@@ -2,6 +2,7 @@ FROM hashicorp/terraform:1.0.10 as terraform
 
 FROM amazon/aws-cli:2.3.4 as aws
 
+FROM golang:1.17.3-stretch as go
 
 RUN GO111MODULE=on go get github.com/raviqqe/liche
 
