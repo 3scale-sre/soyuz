@@ -1,6 +1,8 @@
-FROM hashicorp/terraform:0.12.29 as terraform
+FROM hashicorp/terraform:1.0.10 as terraform
 
-FROM golang:1.14.6-buster as go
+FROM amazon/aws-cli:2.3.4 as aws
+
+FROM golang:1.17.3-stretch as go
 
 RUN GO111MODULE=on go get github.com/raviqqe/liche
 
@@ -9,13 +11,17 @@ FROM debian:stable-slim
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
   &&  apt-get install -y --no-install-recommends \
-  git make openssh-client \
+  git make openssh-client curl unzip \
   default-mysql-client \
   python3-minimal ruby \
-  awscli \
   && apt-get clean autoclean \
   && apt-get autoremove -y --purge \
   && rm -rf /var/lib/apt/lists/*
+
+COPY --from=aws /usr/local/aws-cli /usr/local/aws-cli
+
+ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
+ENV PATH "$AWS_BIN:$PATH"
 
 COPY --from=terraform /bin/terraform /usr/bin
 
