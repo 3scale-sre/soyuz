@@ -18,6 +18,9 @@ RUN apt-get update \
   && apt-get autoremove -y --purge \
   && rm -rf /var/lib/apt/lists/*
 
+RUN gem install \
+  my_obfuscate
+
 COPY --from=aws /usr/local/aws-cli /usr/local/aws-cli
 
 ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
