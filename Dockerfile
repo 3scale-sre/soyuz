@@ -1,27 +1,27 @@
-FROM hashicorp/terraform:1.0.10 as terraform
+FROM hashicorp/terraform:1.3.5 as terraform
 
-FROM amazon/aws-cli:2.3.4 as aws
+FROM amazon/aws-cli:2.8.13 as aws
 
-FROM golang:1.17.3-stretch as go
+FROM golang:1.19.3-bullseye as go
 
-RUN GO111MODULE=on go get github.com/raviqqe/liche
+RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
-FROM debian:stable-slim
+FROM debian:stable-20221114-slim
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update \
-  &&  apt-get install -y --no-install-recommends \
-  git make openssh-client curl unzip locales \
-  default-mysql-client \
-  python3-minimal ruby \
-  && apt-get clean autoclean \
-  && apt-get autoremove -y --purge \
-  && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -yq && \
+  DEBIAN_FRONTEND=noninteractive \
+    apt-get install -yq \
+    git make openssh-client curl unzip locales \
+    default-mysql-client \
+    python3-minimal ruby && \
+  find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
 
-RUN echo "LC_ALL=en_US.UTF-8" >> /etc/environment \
-  && echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen\
-  && echo "LANG=en_US.UTF-8" > /etc/locale.conf\
-  && locale-gen en_US.UTF-8
+RUN \
+  echo "LC_ALL=en_US.UTF-8" >>/etc/environment && \
+  echo "en_US.UTF-8 UTF-8" >>/etc/locale.gen && \
+  echo "LANG=en_US.UTF-8" >/etc/locale.conf && \
+  locale-gen en_US.UTF-8
 
 ENV LANG "en_US.UTF-8"
 ENV LANGUAGE "en_US.UTF-8"

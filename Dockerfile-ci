@@ -1,21 +1,21 @@
-FROM hashicorp/terraform:0.12.29 as terraform
+FROM hashicorp/terraform:1.3.5 as terraform
 
-FROM golang:1.14.6-alpine as go
+FROM golang:1.19.3-alpine as go
 
 # install git, required by `go get`
 RUN apk add --update git
 
-RUN GO111MODULE=on go get github.com/raviqqe/liche
+RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
-FROM alpine:3.7
+FROM alpine:3.17
 
 ENV AWSCLI_VERSION 1.18.4
 
 RUN apk add --update \
-  git make bash \
-  && apk --purge -v del py-pip \
-  && rm -rf /var/cache/apk/* \
-  && rm -rf $HOME/.cache
+  git make bash jq && \
+  apk --purge -v del py-pip && \
+  rm -rf /var/cache/apk/* && \
+  rm -rf $HOME/.cache
 
 COPY --from=terraform /bin/terraform /usr/bin
 
