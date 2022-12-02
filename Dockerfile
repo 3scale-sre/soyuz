@@ -2,6 +2,8 @@ FROM hashicorp/terraform:1.3.5 as terraform
 
 FROM amazon/aws-cli:2.8.13 as aws
 
+FROM regclient/regctl:edge-alpine as regctl
+
 FROM golang:1.19.3-bullseye as go
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
@@ -36,6 +38,8 @@ ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
 ENV PATH "$AWS_BIN:$PATH"
 
 COPY --from=terraform /bin/terraform /usr/bin
+
+COPY --from=regctl /usr/local/bin/regctl /usr/bin
 
 ENV GO_BIN /go/bin
 ENV PATH "$GO_BIN:$PATH"
