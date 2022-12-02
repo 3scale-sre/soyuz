@@ -14,7 +14,7 @@ FROM alpine:3.17
 ENV AWSCLI_VERSION 1.18.4
 
 RUN apk add --update \
-  git make bash jq && \
+  git make bash jq curl git && \
   apk --purge -v del py-pip && \
   rm -rf /var/cache/apk/* && \
   rm -rf $HOME/.cache

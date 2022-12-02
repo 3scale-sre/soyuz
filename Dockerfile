@@ -15,7 +15,7 @@ RUN apt-get update -yq && \
   DEBIAN_FRONTEND=noninteractive \
     apt-get install -yq \
     git make openssh-client curl unzip locales \
-    default-mysql-client \
+    default-mysql-client jq \
     python3-minimal ruby && \
   find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
 
