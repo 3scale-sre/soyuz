@@ -9,12 +9,24 @@ RUN apk add --update git
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
+FROM alpine:3.17 as gh
+
+ENV GITHUB_CLI_VERSION=2.0.0
+ADD https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_amd64.tar.gz /tmp/gh.tgz
+
+RUN tar \
+  --strip-components=2 \
+  --extract \
+  --file /tmp/gh.tgz \
+  gh_${GITHUB_CLI_VERSION}_linux_amd64/bin/gh && \
+  mv -v gh /bin/gh
+
 FROM alpine:3.17
 
 ENV AWSCLI_VERSION 1.18.4
 
 RUN apk add --update \
-  git make bash jq curl git && \
+  git make bash jq curl gpg gnupg less openssh patch && \
   apk --purge -v del py-pip && \
   rm -rf /var/cache/apk/* && \
   rm -rf $HOME/.cache
@@ -22,6 +34,8 @@ RUN apk add --update \
 COPY --from=terraform /bin/terraform /usr/bin
 
 COPY --from=regctl /usr/local/bin/regctl /usr/bin
+
+COPY --from=gh  /bin/gh /usr/bin
 
 ENV GO_BIN /go/bin
 ENV PATH "$GO_BIN:$PATH"

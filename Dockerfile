@@ -8,6 +8,18 @@ FROM golang:1.19.3-bullseye as go
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
+FROM alpine:3.17 as gh
+
+ENV GITHUB_CLI_VERSION=2.0.0
+ADD https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_amd64.tar.gz /tmp/gh.tgz
+
+RUN tar \
+  --strip-components=2 \
+  --extract \
+  --file /tmp/gh.tgz \
+  gh_${GITHUB_CLI_VERSION}_linux_amd64/bin/gh && \
+  mv -v gh /bin/gh
+
 FROM debian:stable-20221114-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -40,6 +52,8 @@ ENV PATH "$AWS_BIN:$PATH"
 COPY --from=terraform /bin/terraform /usr/bin
 
 COPY --from=regctl /usr/local/bin/regctl /usr/bin
+
+COPY --from=gh /bin/gh /usr/bin
 
 ENV GO_BIN /go/bin
 ENV PATH "$GO_BIN:$PATH"
