@@ -20,6 +20,19 @@ RUN tar \
   gh_${GITHUB_CLI_VERSION}_linux_amd64/bin/gh && \
   mv -v gh /bin/gh
 
+FROM alpine:3.17 as yq
+
+ENV VERSION=v4.30.5
+ENV BINARY=yq_linux_amd64
+
+ADD https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz /tmp/yq.tgz
+
+RUN tar \
+  --extract \
+  --file /tmp/yq.tgz \
+  ./${BINARY} && \
+  mv -v ${BINARY} /bin/yq
+
 FROM debian:stable-20221114-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -49,11 +62,13 @@ COPY --from=aws /usr/local/aws-cli /usr/local/aws-cli
 ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
 ENV PATH "$AWS_BIN:$PATH"
 
-COPY --from=terraform /bin/terraform /usr/bin
+COPY --from=terraform /bin/terraform /usr/local/bin
 
-COPY --from=regctl /usr/local/bin/regctl /usr/bin
+COPY --from=regctl /usr/local/bin/regctl /usr/local/bin
 
-COPY --from=gh /bin/gh /usr/bin
+COPY --from=gh /bin/gh /usr/local/bin
+
+COPY --from=yq /bin/yq /usr/local/bin
 
 ENV GO_BIN /go/bin
 ENV PATH "$GO_BIN:$PATH"
