@@ -8,6 +8,31 @@ FROM golang:1.19.3-bullseye as go
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
+FROM alpine:3.17 as gh
+
+ENV GITHUB_CLI_VERSION=2.0.0
+ADD https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_amd64.tar.gz /tmp/gh.tgz
+
+RUN tar \
+  --strip-components=2 \
+  --extract \
+  --file /tmp/gh.tgz \
+  gh_${GITHUB_CLI_VERSION}_linux_amd64/bin/gh && \
+  mv -v gh /bin/gh
+
+FROM alpine:3.17 as yq
+
+ENV VERSION=v4.30.5
+ENV BINARY=yq_linux_amd64
+
+ADD https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz /tmp/yq.tgz
+
+RUN tar \
+  --extract \
+  --file /tmp/yq.tgz \
+  ./${BINARY} && \
+  mv -v ${BINARY} /bin/yq
+
 FROM debian:stable-20221114-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -37,9 +62,13 @@ COPY --from=aws /usr/local/aws-cli /usr/local/aws-cli
 ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
 ENV PATH "$AWS_BIN:$PATH"
 
-COPY --from=terraform /bin/terraform /usr/bin
+COPY --from=terraform /bin/terraform /usr/local/bin
 
-COPY --from=regctl /usr/local/bin/regctl /usr/bin
+COPY --from=regctl /usr/local/bin/regctl /usr/local/bin
+
+COPY --from=gh /bin/gh /usr/local/bin
+
+COPY --from=yq /bin/yq /usr/local/bin
 
 ENV GO_BIN /go/bin
 ENV PATH "$GO_BIN:$PATH"
