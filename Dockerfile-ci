@@ -9,6 +9,8 @@ RUN apk add --update git
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
+FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
+
 FROM alpine:3.17 as gh
 
 ENV GITHUB_CLI_VERSION=2.0.0
@@ -42,6 +44,8 @@ RUN apk add --update \
   apk --purge -v del py-pip && \
   rm -rf /var/cache/apk/* && \
   rm -rf $HOME/.cache
+
+COPY --from=git-init /ko-app/git-init /usr/local/bin
 
 COPY --from=terraform /bin/terraform /usr/local/bin
 

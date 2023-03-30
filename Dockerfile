@@ -33,6 +33,8 @@ RUN tar \
   ./${BINARY} && \
   mv -v ${BINARY} /bin/yq
 
+FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
+
 FROM debian:stable-20221114-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -61,6 +63,8 @@ COPY --from=aws /usr/local/aws-cli /usr/local/aws-cli
 
 ENV AWS_BIN /usr/local/aws-cli/v2/current/bin
 ENV PATH "$AWS_BIN:$PATH"
+
+COPY --from=git-init /ko-app/git-init /usr/local/bin
 
 COPY --from=terraform /bin/terraform /usr/local/bin
 
