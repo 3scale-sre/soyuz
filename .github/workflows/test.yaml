@@ -1,0 +1,14 @@
+name: test
+
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build images
+        run: TAG=test make build-all
