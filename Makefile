@@ -1,7 +1,7 @@
 
 .PHONY: help
 
-TAG	?= build
+TAG	?= 4.4.5
 CI_TAG ?= ci
 HUB	?= quay.io/3scale
 IMAGE	?= quay.io/3scale/soyuz
@@ -10,6 +10,9 @@ help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
 		| awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' \
 		| egrep -v -e '^[^[:alnum:]]' -e '^$@$$' | sort
+
+get-new-release:
+	@hack/new-release.sh v$(TAG)
 
 build-all-release: build build-$(CI_TAG)
 
