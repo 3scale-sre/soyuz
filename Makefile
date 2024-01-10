@@ -1,7 +1,7 @@
 
 .PHONY: help
 
-TAG	?= 4.4.5
+TAG	?= 4.5.0
 CI_TAG ?= ci
 HUB	?= quay.io/3scale
 IMAGE	?= quay.io/3scale/soyuz
