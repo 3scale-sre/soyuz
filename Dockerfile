@@ -35,16 +35,22 @@ RUN tar \
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
-FROM debian:stable-20221114-slim
+FROM debian:12.4-slim
 
 ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update -yq && \
   DEBIAN_FRONTEND=noninteractive \
     apt-get install -yq \
-    git make openssh-client curl unzip locales \
+    git make openssh-client curl wget jq gnupg unzip locales lsb-release \
     python3-minimal python3-boto3 \
-    default-mysql-client jq \
-    python3-minimal ruby && \
+    ruby && \
+  find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
+
+RUN TEMP_DEB="$(mktemp)" && \
+  wget -O "$TEMP_DEB" 'https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb' && \
+  dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB" && \
+  apt-get update -yq && apt-get install -yq mysql-community-client  && \
   find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
 
 RUN \
