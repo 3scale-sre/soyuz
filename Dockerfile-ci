@@ -40,7 +40,7 @@ FROM alpine:3.17
 ENV AWSCLI_VERSION 1.18.4
 
 RUN apk add --update \
-  git make bash jq curl gpg gnupg less openssh patch \
+  git make bash jq curl gpg gnupg less openssh patch pigz \
   python3 py3-boto3 && \
   apk --purge -v del py-pip && \
   rm -rf /var/cache/apk/* && \

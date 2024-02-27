@@ -42,7 +42,7 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -yq && \
   DEBIAN_FRONTEND=noninteractive \
     apt-get install -yq \
-    git make openssh-client curl wget jq gnupg unzip locales lsb-release \
+    git make openssh-client curl wget jq gnupg pigz unzip locales lsb-release \
     python3-minimal python3-boto3 \
     ruby && \
   find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
