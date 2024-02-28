@@ -11,27 +11,18 @@ RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 FROM alpine:3.17 as gh
 
 ENV GITHUB_CLI_VERSION=2.0.0
-ADD https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_amd64.tar.gz /tmp/gh.tgz
-
-RUN tar \
-  --strip-components=2 \
-  --extract \
-  --file /tmp/gh.tgz \
-  gh_${GITHUB_CLI_VERSION}_linux_amd64/bin/gh && \
-  mv -v gh /bin/gh
+RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
+  wget -O /tmp/gh.tgz https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_${ARCH}.tar.gz && \
+  tar --strip-components=2 --extract --file /tmp/gh.tgz \
+  gh_${GITHUB_CLI_VERSION}_linux_${ARCH}/bin/gh && mv -v gh /bin/gh
 
 FROM alpine:3.17 as yq
 
 ENV VERSION=v4.30.5
-ENV BINARY=yq_linux_amd64
-
-ADD https://github.com/mikefarah/yq/releases/download/${VERSION}/${BINARY}.tar.gz /tmp/yq.tgz
-
-RUN tar \
-  --extract \
-  --file /tmp/yq.tgz \
-  ./${BINARY} && \
-  mv -v ${BINARY} /bin/yq
+RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
+  wget -O /tmp/yq.tgz  https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_linux_${ARCH}.tar.gz  && \
+  tar --extract --file /tmp/yq.tgz \
+  ./yq_linux_${ARCH} && mv -v yq_linux_${ARCH} /bin/yq
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
@@ -41,10 +32,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update -yq && \
   DEBIAN_FRONTEND=noninteractive \
-    apt-get install -yq \
-    git make openssh-client curl wget jq gnupg pigz unzip locales lsb-release \
-    python3-minimal python3-boto3 \
-    ruby && \
+  apt-get install -yq \
+  git make openssh-client curl wget jq gnupg pigz unzip locales lsb-release \
+  python3-minimal python3-boto3 \
+  ruby && \
   find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
 
 RUN TEMP_DEB="$(mktemp)" && \

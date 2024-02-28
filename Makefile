@@ -1,10 +1,11 @@
 
 .PHONY: help
 
-TAG	?= 4.5.0
+TAG	?= 4.5.1
 CI_TAG ?= ci
 HUB	?= quay.io/3scale
 IMAGE	?= quay.io/3scale/soyuz
+CONTAINER_TOOL ?= docker
 
 help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
@@ -25,25 +26,32 @@ push-all-latest: push-latest push-$(CI_TAG)-latest
 build-all: build build-ci
 
 build:
-	docker build -t $(IMAGE):$(TAG) -f Dockerfile .
+	${CONTAINER_TOOL} manifest create $(IMAGE):$(TAG) || echo "No manifest found"
+	${CONTAINER_TOOL} build \
+		--platform linux/amd64,linux/arm64 \
+		--manifest $(IMAGE):$(TAG) . -f Dockerfile
 
 push:
-	docker push $(IMAGE):$(TAG)
+	${CONTAINER_TOOL} manifest push $(IMAGE):$(TAG)
 
 build-latest: build
-	docker tag $(IMAGE):$(TAG) $(IMAGE):latest
+	${CONTAINER_TOOL} tag $(IMAGE):$(TAG) $(IMAGE):latest
 
 push-latest: build-latest
-	docker push $(IMAGE):latest
+	${CONTAINER_TOOL} push $(IMAGE):latest
 
 build-$(CI_TAG):
-	docker build -t $(IMAGE):$(TAG)-$(CI_TAG) -f Dockerfile-$(CI_TAG) .
+	${CONTAINER_TOOL} manifest rm $(IMAGE):$(TAG)-$(CI_TAG) || echo "No manifest found"
+	${CONTAINER_TOOL} manifest create $(IMAGE):$(TAG)-$(CI_TAG)
+	${CONTAINER_TOOL} build \
+		--platform linux/amd64,linux/arm64 \
+		--manifest $(IMAGE):$(TAG)-$(CI_TAG) . -f Dockerfile-$(CI_TAG)
 
 push-$(CI_TAG): build-$(CI_TAG)
-	docker push $(IMAGE):$(TAG)-$(CI_TAG)
+	${CONTAINER_TOOL} manifest push $(IMAGE):$(TAG)-$(CI_TAG)
 
 build-$(CI_TAG)-latest: build-$(CI_TAG)
-	docker tag $(IMAGE):$(TAG)-$(CI_TAG) $(IMAGE):latest-$(CI_TAG)
+	${CONTAINER_TOOL} tag $(IMAGE):$(TAG)-$(CI_TAG) $(IMAGE):latest-$(CI_TAG)
 
 push-$(CI_TAG)-latest: build-$(CI_TAG)-latest
-	docker push $(IMAGE):latest-$(CI_TAG)
+	${CONTAINER_TOOL} push $(IMAGE):latest-$(CI_TAG)
