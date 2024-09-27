@@ -1,7 +1,7 @@
 
 .PHONY: help
 
-TAG	?= 4.5.1
+TAG	?= 4.5.3
 CI_TAG ?= ci
 HUB	?= quay.io/3scale
 IMAGE	?= quay.io/3scale/soyuz
@@ -26,7 +26,8 @@ push-all-latest: push-latest push-$(CI_TAG)-latest
 build-all: build build-ci
 
 build:
-	${CONTAINER_TOOL} manifest create $(IMAGE):$(TAG) || echo "No manifest found"
+	${CONTAINER_TOOL} manifest rm $(IMAGE):$(TAG) || echo "No manifest found"
+	${CONTAINER_TOOL} manifest create $(IMAGE):$(TAG)
 	${CONTAINER_TOOL} build \
 		--platform linux/amd64,linux/arm64 \
 		--manifest $(IMAGE):$(TAG) . -f Dockerfile

@@ -8,7 +8,7 @@ FROM golang:1.19.3-bullseye as go
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
-FROM alpine:3.17 as gh
+FROM alpine:3.20 as gh
 
 ENV GITHUB_CLI_VERSION=2.0.0
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
@@ -16,7 +16,7 @@ RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
   tar --strip-components=2 --extract --file /tmp/gh.tgz \
   gh_${GITHUB_CLI_VERSION}_linux_${ARCH}/bin/gh && mv -v gh /bin/gh
 
-FROM alpine:3.17 as yq
+FROM alpine:3.20 as yq
 
 ENV VERSION=v4.30.5
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
@@ -26,6 +26,13 @@ RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
+FROM alpine:3.20 as mysql
+
+RUN if [ $(uname -m) == "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi; \
+  wget -O /tmp/mysql.tgz  https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.39-linux-glibc2.28-${ARCH}.tar.xz && \
+  tar --extract --file /tmp/mysql.tgz &&  \
+  install -m 775 ./mysql-8.0.39-linux-glibc2.28-${ARCH}/bin/mysql /bin/mysql
+
 FROM debian:12.4-slim
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -33,15 +40,10 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update -yq && \
   DEBIAN_FRONTEND=noninteractive \
   apt-get install -yq \
-  git make openssh-client curl wget jq gnupg pigz unzip locales lsb-release \
+  git make openssh-client curl wget jq locales lsb-release \
+  gnupg pigz unzip xz-utils \
   python3-minimal python3-boto3 \
   ruby && \
-  find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
-
-RUN TEMP_DEB="$(mktemp)" && \
-  wget -O "$TEMP_DEB" 'https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb' && \
-  dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB" && \
-  apt-get update -yq && apt-get install -yq mysql-community-client  && \
   find /var/cache/apt/archives /var/lib/apt/lists -not -name lock -type f -delete
 
 RUN \
@@ -53,6 +55,8 @@ RUN \
 ENV LANG "en_US.UTF-8"
 ENV LANGUAGE "en_US.UTF-8"
 ENV LC_ALL "en_US.UTF-8"
+
+COPY --from=mysql /bin/mysql /usr/local/bin/mysql
 
 RUN gem install \
   my_obfuscate
