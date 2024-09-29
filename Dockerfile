@@ -6,7 +6,7 @@ FROM regclient/regctl:edge-alpine as regctl
 
 FROM golang:1.19.3-bullseye as go
 
-RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
+RUN GO111MODULE=on go install -v -x -a github.com/raviqqe/liche@latest
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
