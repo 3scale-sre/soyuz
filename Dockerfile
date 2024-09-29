@@ -31,7 +31,9 @@ FROM alpine:3.20 as mysql
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi; \
   wget -O /tmp/mysql.tgz  https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-8.0.39-linux-glibc2.28-${ARCH}.tar.xz && \
   tar --extract --file /tmp/mysql.tgz &&  \
-  install -m 775 ./mysql-8.0.39-linux-glibc2.28-${ARCH}/bin/mysql /bin/mysql
+  install -m 775 ./mysql-8.0.39-linux-glibc2.28-${ARCH}/bin/mysql /bin/mysql && \
+  install -m 775 ./mysql-8.0.39-linux-glibc2.28-${ARCH}/bin/mysqldump /bin/mysqldump
+
 
 FROM debian:12.4-slim
 
@@ -57,6 +59,7 @@ ENV LANGUAGE "en_US.UTF-8"
 ENV LC_ALL "en_US.UTF-8"
 
 COPY --from=mysql /bin/mysql /usr/local/bin/mysql
+COPY --from=mysql /bin/mysqldump /usr/local/bin/mysqldump
 
 RUN gem install \
   my_obfuscate
@@ -76,10 +79,10 @@ COPY --from=gh /bin/gh /usr/local/bin
 
 COPY --from=yq /bin/yq /usr/local/bin
 
-ENV GO_BIN /go/bin
-ENV PATH "$GO_BIN:$PATH"
+# ENV GO_BIN /go/bin
+# ENV PATH "$GO_BIN:$PATH"
 
-COPY --from=go /go/bin $GO_BIN
+# COPY --from=go /go/bin $GO_BIN
 
 ENV BIN_3SCALE /opt/3scale/bin
 ENV PATH "$BIN_3SCALE:$PATH"
