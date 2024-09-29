@@ -8,6 +8,8 @@ FROM golang:1.19.3-bullseye as go
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
+FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
+
 FROM alpine:3.20 as gh
 
 ENV GITHUB_CLI_VERSION=2.0.0
@@ -23,8 +25,6 @@ RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
   wget -O /tmp/yq.tgz  https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_linux_${ARCH}.tar.gz  && \
   tar --extract --file /tmp/yq.tgz \
   ./yq_linux_${ARCH} && mv -v yq_linux_${ARCH} /bin/yq
-
-FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
 FROM alpine:3.20 as mysql
 

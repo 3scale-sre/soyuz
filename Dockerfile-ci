@@ -4,7 +4,6 @@ FROM regclient/regctl:edge-alpine as regctl
 
 FROM golang:1.19.3-alpine as go
 
-# install git, required by `go get`
 RUN apk add --update git
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest

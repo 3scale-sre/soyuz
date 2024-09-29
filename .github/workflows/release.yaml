@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v2
 
@@ -18,23 +18,23 @@ jobs:
       - name: Build images
         run: TAG=${NEW_RELEASE:-latest} make build-all-release
 
-      - name: Login to quay.io/3scale
-        if: ${{ env.NEW_RELEASE != '' }}
-        uses: docker/login-action@v1
+      - if: ${{ env.NEW_RELEASE != '' }}
+        name: Login to quay.io/3scale
+        uses: redhat-actions/podman-login@v1
         with:
+          password: ${{ secrets.REGISTRY_PASSWORD }}
           registry: quay.io
           username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Push new images
-        if: ${{ env.NEW_RELEASE != '' }}
+      - if: ${{ env.NEW_RELEASE != '' }}
+        name: Push new images
         run: TAG=${NEW_RELEASE:-latest} make push-all-release
 
-      - name: Create a new draft-release in github
-        if: ${{ env.NEW_RELEASE != '' }}
+      - if: ${{ env.NEW_RELEASE != '' }}
+        name: Create a new draft-release in github
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
           automatic_release_tag: "${{ env.NEW_RELEASE }}"
-          title: "${{ env.NEW_RELEASE }}"
           draft: true
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          title: "${{ env.NEW_RELEASE }}"

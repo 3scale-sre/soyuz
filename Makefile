@@ -5,7 +5,7 @@ TAG	?= 4.5.3
 CI_TAG ?= ci
 HUB	?= quay.io/3scale
 IMAGE	?= quay.io/3scale/soyuz
-CONTAINER_TOOL ?= docker
+CONTAINER_TOOL ?= podman
 
 help:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null \
