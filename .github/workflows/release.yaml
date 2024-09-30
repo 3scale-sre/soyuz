@@ -2,39 +2,49 @@ name: release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*"
 
 jobs:
-  build:
+  docker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - id: meta
+        name: Docker meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            quay.io/3scale/soyuz
+          tags: |
+            type=semver,pattern={{version}}
 
-      - name: Export release name
-        run: |
-          echo "NEW_RELEASE=$(make get-new-release)" >> $GITHUB_ENV
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Build images
-        run: TAG=${NEW_RELEASE:-latest} make build-all-release
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - if: ${{ env.NEW_RELEASE != '' }}
-        name: Login to quay.io/3scale
-        uses: redhat-actions/podman-login@v1
+      - name: Login to Quay.io
+        uses: docker/login-action@v3
         with:
           password: ${{ secrets.REGISTRY_PASSWORD }}
           registry: quay.io
           username: ${{ secrets.REGISTRY_USER }}
 
-      - if: ${{ env.NEW_RELEASE != '' }}
-        name: Push new images
-        run: TAG=${NEW_RELEASE:-latest} make push-all-release
-
-      - if: ${{ env.NEW_RELEASE != '' }}
-        name: Create a new draft-release in github
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: Build and push
+        uses: docker/build-push-action@v6
         with:
-          automatic_release_tag: "${{ env.NEW_RELEASE }}"
-          draft: true
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          title: "${{ env.NEW_RELEASE }}"
+          file: Dockerfile
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+
+      - name: Build and push CI image
+        uses: docker/build-push-action@v6
+        with:
+          file: Dockerfile-ci
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-ci
