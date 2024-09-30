@@ -16,7 +16,7 @@ jobs:
           images: |
             quay.io/3scale/soyuz
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{raw}}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
