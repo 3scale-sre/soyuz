@@ -28,5 +28,6 @@ jobs:
         with:
           file: Dockerfile-ci
           platforms: linux/amd64,linux/arm64
-          push: flalse
+          provenance: false
+          push: false
           tags: quay.io/3scale/soyuz:test-ci
