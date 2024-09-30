@@ -58,8 +58,8 @@ ENV LANG "en_US.UTF-8"
 ENV LANGUAGE "en_US.UTF-8"
 ENV LC_ALL "en_US.UTF-8"
 
-COPY --from=mysql /bin/mysql /usr/local/bin/mysql
-COPY --from=mysql /bin/mysqldump /usr/local/bin/mysqldump
+COPY --from=mysql /bin/mysql /usr/local/bin
+COPY --from=mysql /bin/mysqldump /usr/local/bin
 
 RUN gem install \
   my_obfuscate
