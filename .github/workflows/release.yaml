@@ -41,6 +41,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
+      - id: meta-ci
+        name: Docker meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            quay.io/3scale/soyuz
+          tags: |
+            type=semver,pattern={{raw}}-ci
+
       - name: Build and push CI image
         uses: docker/build-push-action@v6
         with:
@@ -49,4 +58,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: false
           push: true
-          tags: ${{ steps.meta.outputs.tags }}-ci
+          tags: ${{ steps.meta.outputs.tags }}
