@@ -7,7 +7,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - id: meta
         name: Docker meta
@@ -51,7 +51,7 @@ jobs:
           images: |
             quay.io/3scale/soyuz
           tags: |
-              type=raw,value={{tag}}-ci
+            type=raw,value={{tag}}-ci
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

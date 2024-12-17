@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  docker:
-    runs-on: ubuntu-latest
+  image-build-test:
+    runs-on: ubuntu-24.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -20,8 +20,17 @@ jobs:
         with:
           file: Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: flalse
+          push: false
           tags: quay.io/3scale/soyuz:test
+
+  ci-image-build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build CI Image
         uses: docker/build-push-action@v6
