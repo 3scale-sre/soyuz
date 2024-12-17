@@ -10,6 +10,15 @@ RUN GO111MODULE=on go install -v -x -a github.com/raviqqe/liche@latest
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
+FROM alpine:3.20 as PolicyGenerator
+
+ENV VERSION="v1.16.0"
+ENV REGISTRY="open-cluster-management-io/policy-generator-plugin"
+ENV BINARY="/bin/PolicyGenerator"
+
+RUN if [ $(uname -m) == "aarch64" ]; then ARCH="arm64"; else ARCH="amd64"; fi; \
+  wget -q "https://github.com/${REGISTRY}/releases/download/${VERSION}/linux-${ARCH}-PolicyGenerator" -O ${BINARY}
+
 FROM alpine:3.20 as gh
 
 ENV GITHUB_CLI_VERSION=2.0.0
@@ -78,6 +87,11 @@ COPY --from=regctl /usr/local/bin/regctl /usr/local/bin
 COPY --from=gh /bin/gh /usr/local/bin
 
 COPY --from=yq /bin/yq /usr/local/bin
+
+ENV KUSTOMIZE_PLUGIN_HOME /opt/kustomize/plugin
+
+COPY --from=PolicyGenerator --chmod=775 /bin/PolicyGenerator \
+  /opt/kustomize/plugin/policy.open-cluster-management.io/v1/policygenerator/PolicyGenerator
 
 # ENV GO_BIN /go/bin
 # ENV PATH "$GO_BIN:$PATH"
