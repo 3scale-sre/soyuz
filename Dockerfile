@@ -10,6 +10,14 @@ RUN GO111MODULE=on go install -v -x -a github.com/raviqqe/liche@latest
 
 FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 as git-init
 
+FROM alpine:3.20 as kubectl
+
+ENV VERSION="v1.32.0"
+ENV BINARY="/bin/kubectl"
+
+RUN if [ $(uname -m) == "aarch64" ]; then ARCH="arm64"; else ARCH="amd64"; fi; \
+  wget -q "https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubectl" -O ${BINARY}
+
 FROM alpine:3.20 as PolicyGenerator
 
 ENV VERSION="v1.16.0"
@@ -87,6 +95,8 @@ COPY --from=regctl /usr/local/bin/regctl /usr/local/bin
 COPY --from=gh /bin/gh /usr/local/bin
 
 COPY --from=yq /bin/yq /usr/local/bin
+
+COPY --from=kubectl --chmod=775 /bin/kubectl /usr/local/bin
 
 ENV KUSTOMIZE_PLUGIN_HOME /opt/kustomize/plugin
 
