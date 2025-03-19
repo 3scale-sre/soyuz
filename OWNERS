@@ -1,6 +1,5 @@
-"owners":
-  "approvers":
-  - "team-sre-approvers"
-  "labels": []
-  "reviewers":
-  - "team-sre-reviewers"
+"approvers":
+- "team-sre-approvers"
+"labels": []
+"reviewers":
+- "team-sre-reviewers"
