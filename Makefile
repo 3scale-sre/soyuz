@@ -3,8 +3,8 @@
 
 TAG	?= 4.5.4
 CI_TAG ?= ci
-HUB	?= quay.io/3scale
-IMAGE	?= quay.io/3scale/soyuz
+HUB	?= quay.io/3scale-sre
+IMAGE	?= quay.io/3scale-sre/soyuz
 CONTAINER_TOOL ?= podman
 
 help:
