@@ -1,6 +1,6 @@
 # Soyuz
 
-[![3scale/soyuz](https://circleci.com/gh/3scale-ops/soyuz.svg?style=shield)](https://circleci.com/gh/3scale-ops/soyuz)
+[![3scale/soyuz](https://circleci.com/gh/3scale-sre/soyuz.svg?style=shield)](https://circleci.com/gh/3scale-sre/soyuz)
 
 [![soyuz](soyuz.jpg)](https://www.pexels.com/photo/space-technology-research-science-41006/)
 

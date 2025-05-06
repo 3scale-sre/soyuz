@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REPO="3scale-ops/soyuz"
+REPO="3scale-sre/soyuz"
 
 # Skip if alpha release
 [[ ${1} == *"-alpha"* ]] && echo "" && exit 0
