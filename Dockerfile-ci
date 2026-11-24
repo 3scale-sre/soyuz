@@ -1,49 +1,52 @@
-FROM hashicorp/terraform:1.3.5 AS terraform
+FROM hashicorp/terraform:1.17.2 AS terraform
 
-FROM regclient/regctl:edge-alpine AS regctl
+FROM regclient/regctl:v0.11.7 AS regctl
 
-FROM golang:1.19.3-alpine AS go
+FROM golang:1.27-alpine AS go
 
 RUN apk add --update git
 
 RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
 
-FROM gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.45.0 AS git-init
+FROM alpine:3.23 AS kubectl
 
-FROM alpine:3.20 AS kubectl
-
-ENV VERSION="v1.32.0"
+ENV VERSION="v1.37.2"
 ENV BINARY="/bin/kubectl"
 
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH="arm64"; else ARCH="amd64"; fi; \
   wget -q "https://dl.k8s.io/release/${VERSION}/bin/linux/${ARCH}/kubectl" -O ${BINARY}
 
-FROM alpine:3.20 AS policygenerator
+# Built from source: the published release binaries are linked against an
+# older Go toolchain and keep inheriting its stdlib CVEs.
+FROM golang:1.27-alpine AS policygenerator
 
-ENV VERSION="v1.16.0"
-ENV REGISTRY="open-cluster-management-io/policy-generator-plugin"
-ENV BINARY="/bin/PolicyGenerator"
+ENV VERSION="v1.19.0"
 
-RUN if [ $(uname -m) == "aarch64" ]; then ARCH="arm64"; else ARCH="amd64"; fi; \
-  wget -q "https://github.com/${REGISTRY}/releases/download/${VERSION}/linux-${ARCH}-PolicyGenerator" -O ${BINARY}
+RUN apk add --no-cache git && \
+  git clone --depth 1 --branch ${VERSION} \
+    https://github.com/open-cluster-management-io/policy-generator-plugin.git /src && \
+  cd /src && \
+  go get golang.org/x/net@v0.62.0 golang.org/x/text@v0.44.0 && \
+  CGO_ENABLED=0 go build -trimpath -o /bin/PolicyGenerator ./cmd/PolicyGenerator && \
+  chmod 775 /bin/PolicyGenerator
 
-FROM alpine:3.20 AS gh
+FROM alpine:3.23 AS gh
 
-ENV GITHUB_CLI_VERSION=2.0.0
+ENV GITHUB_CLI_VERSION=2.105.0
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
   wget -O /tmp/gh.tgz https://github.com/cli/cli/releases/download/v${GITHUB_CLI_VERSION}/gh_${GITHUB_CLI_VERSION}_linux_${ARCH}.tar.gz && \
   tar --strip-components=2 --extract --file /tmp/gh.tgz \
   gh_${GITHUB_CLI_VERSION}_linux_${ARCH}/bin/gh && mv -v gh /bin/gh
 
-FROM alpine:3.20 AS yq
+FROM alpine:3.23 AS yq
 
-ENV VERSION=v4.30.5
+ENV VERSION=v4.54.3
 RUN if [ $(uname -m) == "aarch64" ]; then ARCH=arm64; else ARCH=amd64; fi; \
   wget -O /tmp/yq.tgz  https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_linux_${ARCH}.tar.gz  && \
   tar --extract --file /tmp/yq.tgz \
   ./yq_linux_${ARCH} && mv -v yq_linux_${ARCH} /bin/yq
 
-FROM alpine:3.20
+FROM alpine:3.23
 
 RUN apk add --update \
   git make bash jq curl gpg gnupg less openssh patch pigz \
@@ -52,11 +55,9 @@ RUN apk add --update \
   rm -rf /var/cache/apk/* && \
   rm -rf $HOME/.cache
 
-COPY --from=git-init /ko-app/git-init /usr/local/bin
-
 COPY --from=terraform /bin/terraform /usr/local/bin
 
-COPY --from=regctl /usr/local/bin/regctl /usr/local/bin
+COPY --from=regctl /regctl /usr/local/bin
 
 COPY --from=gh  /bin/gh /usr/local/bin
 
