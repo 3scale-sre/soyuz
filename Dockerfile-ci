@@ -4,9 +4,13 @@ FROM regclient/regctl:v0.11.7 AS regctl
 
 FROM golang:1.27-alpine AS go
 
-RUN apk add --update git
-
-RUN GO111MODULE=on go install github.com/raviqqe/liche@latest
+# liche pins 2020-era dependencies (fasthttp v1.16, x/net 2020, brotli v1.0.0,
+# compress v1.10.10). Build it from source with those bumped.
+RUN apk add --no-cache git && \
+  git clone --depth 1 https://github.com/raviqqe/liche.git /src && \
+  cd /src && \
+  go get github.com/valyala/fasthttp@latest golang.org/x/net@latest && \
+  CGO_ENABLED=0 go build -trimpath -o /go/bin/liche .
 
 FROM alpine:3.23 AS kubectl
 
@@ -54,6 +58,14 @@ RUN apk add --update \
   apk --purge -v del py-pip && \
   rm -rf /var/cache/apk/* && \
   rm -rf $HOME/.cache
+
+# Alpine 3.23 ships urllib3 2.6.3 / cryptography 46.0.7, both below the fixed
+# versions. Replace them with the current wheels; pip is removed afterwards.
+RUN apk add --no-cache py3-pip && \
+  pip install --no-cache-dir --break-system-packages --only-binary :all: \
+    urllib3==2.8.0 cryptography==50.0.0 && \
+  apk --purge -v del py3-pip && \
+  rm -rf /root/.cache
 
 COPY --from=terraform /bin/terraform /usr/local/bin
 
